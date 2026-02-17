@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Mortal Combat</title>
+</head>
+<body>
+
+<h1 style="color:red; text-align:center; font-family:Impact;">MORTAL COMBAT</h1>
+<p style="color:white; text-align:center;">
+  P1: A/D move, F punch, G kick | 
+  P2: ←/→ move, L punch, ; kick
+</p>
+
+<div id="game"></div>
+<div id="message" style="text-align:center; color:red; font-size:48px; margin-top:20px;"></div>
+
+<script>
+  // Inject styles
+  const style = document.createElement("style");
+  style.innerHTML = `
+    body {
+      background: black;
+      margin: 0;
+      padding: 0;
+      color: red;
+      font-family: Impact, Arial Black, sans-serif;
+      text-align: center;
+    }
+
+    #arena {
+      position: relative;
+      width: 900px;
+      height: 350px;
+      margin: 30px auto;
+      border: 4px solid darkred;
+      background: linear-gradient(#300, #000);
+      overflow: hidden;
+    }
+
+    .fighter {
+      position: absolute;
+      bottom: 0;
+      width: 70px;
+      height: 120px;
+      background: #555;
+      box-shadow: 0 0 15px red;
+    }
+
+    #p1 { background: #0af; }
+    #p2 { background: #fa0; }
+
+    .attack { transform: scaleX(1.3); }
+
+    .blood {
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background: darkred;
+      border-radius: 50%;
+      animation: splatter 0.6s forwards;
+    }
+
+    @keyframes splatter {
+      to {
+        transform: translateY(40px);
+        opacity: 0;
+      }
+    }
+
+    #ui {
+      display: flex;
+      justify-content: space-between;
+      width: 900px;
+      margin: auto;
+    }
+
+    .health {
+      width: 300px;
+      height: 25px;
+      border: 2px solid red;
+      margin: 10px;
+    }
+
+    .bar {
+      height: 100%;
+      background: darkred;
+      width: 100%;
+      transition: width 0.2s;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Inject UI + arena
+  document.getElementById("game").innerHTML = `
+    <div id="ui">
+      <div class="health"><div id="h1" class="bar"></div></div>
+      <div class="health"><div id="h2" class="bar"></div></div>
+    </div>
+    <div id="arena">
+      <div id="p1" class="fighter"></div>
+      <div id="p2" class="fighter"></div>
+    </div>
+  `;
+
+  const p1 = document.getElementById("p1");
+  const p2 = document.getElementById("p2");
+  const arena = document.getElementById("arena");
+
+  let p1X = 150;
+  let p2X = 680;
+  let h1 = 100;
+  let h2 = 100;
+
+  const speed = 18;
+  const range = 80;
+
+  function update() {
+    p1.style.left = p1X + "px";
+    p2.style.left = p2X + "px";
+    document.getElementById("h1").style.width = h1 + "%";
+    document.getElementById("h2").style.width = h2 + "%";
+  }
+
+  function distance() {
+    return Math.abs(p1X - p2X);
+  }
+
+  function blood(x) {
+    const b = document.createElement("div");
+    b.className = "blood";
+    b.style.left = x + "px";
+    b.style.bottom = "40px";
+    arena.appendChild(b);
+    setTimeout(() => b.remove(), 600);
+  }
+
+  function attack(attacker, damage) {
+    if (h1 <= 0 || h2 <= 0) return;
+
+    attacker.classList.add("attack");
+    setTimeout(() => attacker.classList.remove("attack"), 100);
+
+    if (distance() < range) {
+      if (attacker === p1) {
+        h2 -= damage;
+        blood(p2X + 30);
+      } else {
+        h1 -= damage;
+        blood(p1X + 30);
+      }
+      update();
+    }
+
+    if (h1 <= 0 || h2 <= 0) finish();
+  }
+
+  function finish() {
+    document.getElementById("message").textContent = "FINISH HIM!";
+    document.removeEventListener("keydown", controls);
+  }
+
+  function controls(e) {
+    switch (e.key) {
+      // Player 1
+      case "a":
+        p1X = Math.max(0, p1X - speed);
+        break;
+      case "d":
+        p1X = Math.min(830, p1X + speed);
+        break;
+      case "f":
+        attack(p1, 8);
+        break;
+      case "g":
+        attack(p1, 15);
+        break;
+
+      // Player 2
+      case "ArrowLeft":
+        p2X = Math.max(0, p2X - speed);
+        break;
+      case "ArrowRight":
+        p2X = Math.min(830, p2X + speed);
+        break;
+      case "l":
+        attack(p2, 8);
+        break;
+      case ";":
+        attack(p2, 15);
+        break;
+    }
+    update();
+  }
+
+  document.addEventListener("keydown", controls);
+  update();
+</script>
+
+</body>
+</html>
